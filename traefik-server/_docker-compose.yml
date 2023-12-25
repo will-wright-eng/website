@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.3
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/traefik.toml
+      - ./acme.json:/acme.json
+
+  web:
+    build: .
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.routers.websecure.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.websecure.entrypoints=websecure"
+      - "traefik.http.routers.websecure.tls.certresolver=myresolver"
+    volumes:
+      - ./mywebsite:/usr/src/app/mywebsite
+
+networks:
+  default:
+    external:
+      name: traefik_default

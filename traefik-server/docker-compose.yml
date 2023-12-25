@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.3
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --log.level=DEBUG
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+    networks:
+      - webnet
+
+  web:
+    build: .
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`localhost`)"
+      - "traefik.http.middlewares.web-redirect.redirectregex.regex=^http://localhost/(.*)"
+      - "traefik.http.middlewares.web-redirect.redirectregex.replacement=http://localhost:80/$$1"
+      - "traefik.http.routers.web.middlewares=web-redirect"
+    volumes:
+      - ./mywebsite:/usr/src/app/mywebsite
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    name: webnet

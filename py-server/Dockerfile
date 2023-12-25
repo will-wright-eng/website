@@ -4,6 +4,6 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 80
 
 CMD ["python", "./server.py"]
